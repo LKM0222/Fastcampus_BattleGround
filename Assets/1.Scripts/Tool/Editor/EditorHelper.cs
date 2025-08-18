@@ -72,7 +72,7 @@ public class EditorHelper
 	/// </summary>
 	/// <param name="baseData"></param>
 	/// <param name="selection"></param>
-	/// <param name="source"></param>
+	/// <param name="source"> UnityObject를 사용하는 이유 : GameObejct, AudioClip, AnimClip등 어떤게 들어갈지 몰라서.</param>
 	/// <param name="uiWidth"></param>
 	public static void EditorToolTopLayer(BaseData baseData, ref int selection, ref UnityObject source, int uiWidth)
 	{
