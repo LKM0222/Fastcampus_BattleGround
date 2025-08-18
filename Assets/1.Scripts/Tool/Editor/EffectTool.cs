@@ -112,13 +112,16 @@ public class EffectTool : EditorWindow // 상속해서 Tool Window를 띄움.
             if (GUILayout.Button("Save"))
             {
                 EffectTool.effectData.SaveData();
-                CreateEnumStructure();
+                CreateEnumStructure(); //Save를 누르면 Enum도 자동으로 추가되고 업데이트된다.
                 AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate); // 한번 리프레쉬해라
             }
         }
         EditorGUILayout.EndHorizontal();
     }
 
+    /// <summary>
+    /// EffectList Enum을 자동으로 갱신해주는 함수 
+    /// </summary>
     public void CreateEnumStructure()
     {
         string enumName = "EffectList";
@@ -128,7 +131,7 @@ public class EffectTool : EditorWindow // 상속해서 Tool Window를 띄움.
         {
             if (effectData.names[i] != string.Empty)
             {
-                builder.AppendLine("    " + effectData.names[i] + "=" + i + ",");
+                builder.AppendLine("    " + effectData.names[i] + " = " + i + ",");
             }
         }
         EditorHelper.CreateEnumStructure(enumName, builder);
