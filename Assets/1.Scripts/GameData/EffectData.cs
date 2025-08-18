@@ -25,4 +25,59 @@ public class EffectData : BaseData
     private const string CLIP = "clip"; // 저장 키
 
     private EffectData() { }
+
+    public void LoadData()
+    {
+        // Application.dataPath = Assets 폴더까지의 경로
+        xmlFilePath = Application.dataPath + dataDirectory;
+        TextAsset asset = (TextAsset)ResourceManager.Load(dataPath);
+
+        if (asset == null || asset.text == null) // 데이터가 하나도 없다면
+        {
+            AddData("New Effect");
+            return;
+        }
+
+        // 
+        using (XmlTextReader reader = new XmlTextReader(new StringReader(asset.text)))
+        {
+            int currentId = 0;
+            while (reader.Read())
+            {
+                if (reader.IsStartElement())
+                {
+                    switch (reader.Name)
+                    {
+                        case "length":
+                            int length = int.Parse(reader.ReadString());
+                            names = new string[length];
+                            effectClips = new EffectClip[length];
+                            break;
+
+                        case "id":
+                            currentId = int.Parse(reader.ReadString());
+                            effectClips[currentId] = new EffectClip();
+                            effectClips[currentId].realId = currentId;
+                            break;
+
+                        case "name":
+                            names[currentId] = reader.ReadString();
+                            break;
+
+                        case "effectType":
+                            effectClips[currentId].effectType = Enum.Parse<EffectType>(reader.ReadString());
+                            break;
+
+                        case "effectName":
+                            effectClips[currentId].effectName = reader.ReadString();
+                            break;
+
+                        case "effectPath":
+                            effectClips[currentId].effectPath = reader.ReadString();
+                            break;
+                    }
+                }
+            }
+        }
+    }
 }
