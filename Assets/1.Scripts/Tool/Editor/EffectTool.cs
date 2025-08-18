@@ -54,9 +54,9 @@ public class EffectTool : EditorWindow // 상속해서 Tool Window를 띄움.
                 {
                     SP2 = EditorGUILayout.BeginScrollView(SP2);
                     {
-                        if (effectData.GetDataCount() > 0)
+                        EditorGUILayout.BeginVertical();
                         {
-                            EditorGUILayout.BeginVertical();
+                            if (effectData.GetDataCount() > 0)
                             {
                                 EditorGUILayout.Separator();
                                 EditorGUILayout.LabelField("ID", selection.ToString(), GUILayout.Width(uiWidthLarge));
@@ -85,8 +85,8 @@ public class EffectTool : EditorWindow // 상속해서 Tool Window를 띄움.
                                 }
                                 EditorGUILayout.Separator();
                             }
-                            EditorGUILayout.EndVertical();
                         }
+                        EditorGUILayout.EndVertical();
                     }
                     EditorGUILayout.EndScrollView();
                 }
@@ -128,7 +128,7 @@ public class EffectTool : EditorWindow // 상속해서 Tool Window를 띄움.
         {
             if (effectData.names[i] != string.Empty)
             {
-                builder.AppendLine("    " + effectData.name[i] + "=" + i + ",");
+                builder.AppendLine("    " + effectData.names[i] + "=" + i + ",");
             }
         }
         EditorHelper.CreateEnumStructure(enumName, builder);

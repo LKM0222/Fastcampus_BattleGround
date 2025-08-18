@@ -110,13 +110,13 @@ public class EffectData : BaseData
     {
         if (names == null)
         {
-            names = new string[] { name };
+            names = new string[] { newName };
             effectClips = new EffectClip[] { new EffectClip() };
         }
         else
         {
             // 강의에서 제공하는 Array전용 헬퍼 함수 
-            names = ArrayHelper.Add(name, names); //배열에 name을 넣는다.
+            names = ArrayHelper.Add(newName, names); //배열에 name을 넣는다.
             effectClips = ArrayHelper.Add(new EffectClip(), effectClips);
         }
 

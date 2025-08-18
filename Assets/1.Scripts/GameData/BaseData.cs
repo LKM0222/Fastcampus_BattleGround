@@ -28,7 +28,7 @@ public class BaseData : ScriptableObject
     /// <param name="showId"></param>
     /// <param name="filterWord"></param>
     /// <returns></returns>
-    public string[] GetNameList(bool showId, string filterWord = " ")
+    public string[] GetNameList(bool showId, string filterWord = "")
     {
         string[] retList = new string[0];
 
