@@ -108,7 +108,7 @@ public class EffectData : BaseData
 
     public override int AddData(string newName)
     {
-        if (name == null)
+        if (names == null)
         {
             names = new string[] { name };
             effectClips = new EffectClip[] { new EffectClip() };
