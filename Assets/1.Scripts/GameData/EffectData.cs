@@ -80,4 +80,105 @@ public class EffectData : BaseData
             }
         }
     }
+
+    public void SaveData()
+    {
+        using (XmlTextWriter xml = new XmlTextWriter(xmlFilePath + xmlFileName, System.Text.Encoding.Unicode))
+        {
+            xml.WriteStartDocument();
+            xml.WriteStartElement(EFFECT); // 이 키에 대한 값을 넣을것이다 선언
+            xml.WriteElementString("length", GetDataCount().ToString()); // 데이터의 길이 얻어옴.
+
+            for (int i = 0; i < names.Length; i++)
+            {
+                EffectClip clip = effectClips[i];
+                xml.WriteStartElement(CLIP);
+                xml.WriteElementString("id", i.ToString());
+                xml.WriteElementString("name", names[i]);
+                xml.WriteElementString("effectType", clip.effectType.ToString());
+                xml.WriteElementString("effectPath", clip.effectPath);
+                xml.WriteElementString("effectName", clip.effectName);
+                xml.WriteEndElement();
+            }
+
+            xml.WriteEndElement();
+            xml.WriteEndDocument();
+        }
+    }
+
+    public override int AddData(string newName)
+    {
+        if (name == null)
+        {
+            names = new string[] { name };
+            effectClips = new EffectClip[] { new EffectClip() };
+        }
+        else
+        {
+            // 강의에서 제공하는 Array전용 헬퍼 함수 
+            names = ArrayHelper.Add(name, names); //배열에 name을 넣는다.
+            effectClips = ArrayHelper.Add(new EffectClip(), effectClips);
+        }
+
+        return GetDataCount();
+    }
+
+    public override void RemoveData(int index)
+    {
+        names = ArrayHelper.Remove(index, names);
+        if (names.Length == 0)
+        {
+            names = null;
+        }
+
+        effectClips = ArrayHelper.Remove(index, effectClips);
+    }
+
+    public void ClearData()
+    {
+        foreach (EffectClip clip in effectClips)
+        {
+            clip.ReleaseEffect();
+        }
+        effectClips = null;
+        names = null;
+    }
+
+    public EffectClip GetCopy(int index)
+    {
+        if (index < 0 || index >= effectClips.Length)
+        {
+            return null;
+        }
+
+        EffectClip original = effectClips[index];
+        EffectClip clip = new EffectClip();
+        clip.effectFullPath = original.effectFullPath;
+        clip.effectName = original.effectName;
+        clip.effectType = original.effectType;
+        clip.effectPath = original.effectPath;
+        clip.realId = effectClips.Length;
+
+        return clip;
+    }
+
+
+    /// <summary>
+    /// 원하는 인덱스를 프리로딩 해서 찾아준다.
+    /// </summary>
+    public EffectClip GetClip(int index)
+    {
+        if (index < 0 || index >= effectClips.Length)
+        {
+            return null;
+        }
+        effectClips[index].PreLoad();
+        return effectClips[index];
+    }
+
+    public override void Copy(int index)
+    {
+        names = ArrayHelper.Add(names[index], names);
+        effectClips = ArrayHelper.Add(GetCopy(index), effectClips);
+    }
 }

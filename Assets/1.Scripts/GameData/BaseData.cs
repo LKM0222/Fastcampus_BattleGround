@@ -68,7 +68,7 @@ public class BaseData : ScriptableObject
         return GetDataCount();
     }
 
-    public virtual void RemoveDaat(int index)
+    public virtual void RemoveData(int index)
     {
 
     }
