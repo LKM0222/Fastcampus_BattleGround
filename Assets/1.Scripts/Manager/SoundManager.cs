@@ -174,4 +174,163 @@ public class SoundManager : SingletonMonobehaviour<SoundManager>
             mixer.SetFloat(UIVolumeParam, GetUIVolume());
         }
     }
+
+    void PlayAudioSource(AudioSource source, SoundClip clip, float volume)
+    {
+        if (source == null || clip == null)
+        {
+            return;
+        }
+        source.Stop();
+        source.clip = clip.GetClip();
+        source.volume = volume;
+        source.loop = clip.isLoop;
+        source.pitch = clip.pitch;
+        source.dopplerLevel = clip.dopplerLevel;
+        source.rolloffMode = clip.rolloffMode;
+        source.minDistance = clip.minDistance;
+        source.maxDistance = clip.maxDistance;
+        source.spatialBlend = clip.spartialBlend;
+        source.Play();
+    }
+
+    void PlayAudioSourceAtPoint(SoundClip clip, Vector3 position, float volume)
+    {
+        AudioSource.PlayClipAtPoint(clip.GetClip(), position, volume);
+    }
+
+    public bool IsPlaying()
+    {
+        return (int)currentPlayingType > 0; //None만 아니면 뭐든 재생중인것.
+    }
+
+    public bool IsDifferentSound(SoundClip clip) //동일한 사운드인지 확인 (같은 사운드 재생하지 않게 체크하는 함수)
+    {
+        if (clip == null)
+        {
+            return false;
+        }
+
+        if (currentSound != null && currentSound.realId == clip.realId && IsPlaying() && currentSound.isFadeOut == false)
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    private IEnumerator CheckProcess()
+    {
+        while (isTicking == true && IsPlaying() == true)
+        {
+            yield return new WaitForSeconds(0.05f); // 최적화 필요하다면 체크 간격 줄이기
+            if (currentSound.HasLoop())
+            {
+                if (currentPlayingType == MusicPlayingType.SourceA)
+                {
+                    currentSound.CheckLoop(fadeA_audio);
+                }
+                else if (currentPlayingType == MusicPlayingType.SourceB)
+                {
+                    currentSound.CheckLoop(fadeB_audio);
+                }
+                else if (currentPlayingType == MusicPlayingType.AtoB)
+                {
+                    lastSound.CheckLoop(fadeA_audio);
+                    currentSound.CheckLoop(fadeB_audio);
+                }
+                else if (currentPlayingType == MusicPlayingType.BtoA)
+                {
+                    lastSound.CheckLoop(fadeB_audio);
+                    currentSound.CheckLoop(fadeA_audio);
+                }
+            }
+        }
+    }
+
+    public void DoCheck()
+    {
+        StartCoroutine(CheckProcess());
+    }
+
+    public void FadeIn(SoundClip clip, float time, Interpolate.EaseType ease)
+    {
+        if (IsDifferentSound(clip))
+        {
+            fadeA_audio.Stop();
+            fadeB_audio.Stop();
+            lastSound = currentSound;
+            currentSound = clip;
+            PlayAudioSource(fadeA_audio, currentSound, 0.0f);
+            currentSound.FadeIn(time, ease);
+            currentPlayingType = MusicPlayingType.SourceA;
+            if (currentSound.HasLoop() == true)
+            {
+                isTicking = true;
+                DoCheck();
+            }
+        }
+    }
+
+    public void FadeIn(int index, float time, Interpolate.EaseType ease)
+    {
+        this.FadeIn(DataManager.SoundData().GetCopy(index), time, ease);
+    }
+
+    public void FadeOut(float time, Interpolate.EaseType ease)
+    {
+        if (currentSound != null)
+        {
+            currentSound.FadeOut(time, ease);
+        }
+    }
+
+    private void Update()
+    {
+        if (currentSound == null)
+        {
+            return;
+        }
+
+        switch (currentPlayingType)
+        {
+            case MusicPlayingType.SourceA:
+                {
+                    currentSound.DoFade(Time.deltaTime, fadeA_audio);
+                }
+                break;
+            case MusicPlayingType.SourceB:
+                {
+                    currentSound.DoFade(Time.deltaTime, fadeB_audio);
+                }
+                break;
+            case MusicPlayingType.AtoB:
+                {
+                    lastSound.DoFade(Time.deltaTime, fadeA_audio);
+                    currentSound.DoFade(Time.deltaTime, fadeB_audio);
+                }
+                break;
+            case MusicPlayingType.BtoA:
+                {
+                    lastSound.DoFade(Time.deltaTime, fadeB_audio);
+                    currentSound.DoFade(Time.deltaTime, fadeA_audio);
+                }
+                break;
+        }
+
+        if (fadeA_audio.isPlaying && fadeB_audio.isPlaying == false)
+        {
+            currentPlayingType = MusicPlayingType.SourceA;
+        }
+        else if (fadeA_audio.isPlaying == false && fadeB_audio.isPlaying)
+        {
+            currentPlayingType = MusicPlayingType.SourceB;
+        }
+        else if (fadeA_audio.isPlaying == false && fadeB_audio.isPlaying == false)
+        {
+            currentPlayingType = MusicPlayingType.NONE;
+        }
+    }
 }
