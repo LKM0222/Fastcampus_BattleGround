@@ -45,7 +45,7 @@ public class SoundData : BaseData
                 xml.WriteElementString("rollofmode", clip.rolloffMode.ToString());
                 xml.WriteElementString("mindistance", clip.minDistance.ToString());
                 xml.WriteElementString("maxdistance", clip.maxDistance.ToString());
-                xml.WriteElementString("spartialblend", clip.sparialBlend.ToString());
+                xml.WriteElementString("spartialblend", clip.spartialBlend.ToString());
 
                 if (clip.isLoop == true)
                 {
@@ -85,7 +85,7 @@ public class SoundData : BaseData
 
         if (asset == null || asset.text == null)
         {
-            AddData("New Sound");
+            AddData("NewSound");
             return;
         }
 
@@ -169,7 +169,7 @@ public class SoundData : BaseData
 
                         case "spratialblend":
                             {
-                                soundClips[currentID].sparialBlend = float.Parse(reader.ReadString());
+                                soundClips[currentID].spartialBlend = float.Parse(reader.ReadString());
                             }
                             break;
 
@@ -290,7 +290,7 @@ public class SoundData : BaseData
         clip.rolloffMode = original.rolloffMode;
         clip.minDistance = original.minDistance;
         clip.maxDistance = original.maxDistance;
-        clip.sparialBlend = original.sparialBlend;
+        clip.spartialBlend = original.spartialBlend;
         clip.isLoop = original.isLoop;
         clip.checkTime = original.checkTime;
         clip.setTime = original.setTime;
