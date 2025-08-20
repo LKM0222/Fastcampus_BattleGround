@@ -47,8 +47,8 @@ public class BehaviourController : MonoBehaviour
         behaviours = new List<GenericBehaviour>();
         overrideBehaviours = new List<GenericBehaviour>();
         myAnimator = GetComponent<Animator>();
-        hFloat = Animator.StringToHash("Horizontal");
-        vFloat = Animator.StringToHash("Vertical");
+        hFloat = Animator.StringToHash("H");
+        vFloat = Animator.StringToHash("V");
         camScript = playerCamera.GetComponent<ThirdPersonOrbitCam>();
         myRigidBody = GetComponent<Rigidbody>();
         myTransform = transform;
@@ -93,7 +93,7 @@ public class BehaviourController : MonoBehaviour
 
     public bool IsSprinting()
     {
-        return sprint && IsMoving() && IsSprinting();
+        return sprint && IsMoving(); //&& IsSprinting();
     }
 
     public bool IsGrounded()
