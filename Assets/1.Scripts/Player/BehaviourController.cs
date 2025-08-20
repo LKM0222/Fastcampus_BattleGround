@@ -42,7 +42,8 @@ public class BehaviourController : MonoBehaviour
     public Animator GetAnimator { get => myAnimator; }
     public int GetDefaultBehaviour { get => defaultBehaviour; }
 
-    private void Awake() {
+    private void Awake()
+    {
         behaviours = new List<GenericBehaviour>();
         overrideBehaviours = new List<GenericBehaviour>();
         myAnimator = GetComponent<Animator>();
@@ -58,7 +59,7 @@ public class BehaviourController : MonoBehaviour
     }
 
     public bool IsMoving()
-    {   
+    {
         // 실수가 가질 수 있는 가장 최소의 값 = Epsilon
         // h > 0 || v > 0 과 같지만 아래가 더 안정적임.
         return Mathf.Abs(h) > Mathf.Epsilon || Mathf.Abs(v) > Mathf.Epsilon;
@@ -71,17 +72,17 @@ public class BehaviourController : MonoBehaviour
 
     public bool CanSprint()
     {
-        foreach(GenericBehaviour behaviour in behaviours)
+        foreach (GenericBehaviour behaviour in behaviours)
         {
-            if(!behaviour.AllowSprint)
+            if (!behaviour.AllowSprint)
             {
                 return false;
             }
         }
 
-        foreach(GenericBehaviour behaviour in overrideBehaviours)
+        foreach (GenericBehaviour behaviour in overrideBehaviours)
         {
-            if(!behaviour.AllowSprint)
+            if (!behaviour.AllowSprint)
             {
                 return false;
             }
@@ -101,7 +102,8 @@ public class BehaviourController : MonoBehaviour
         return Physics.SphereCast(ray, colExtents.x, colExtents.x + 0.2f);
     }
 
-    private void Update() {
+    private void Update()
+    {
         h = Input.GetAxis("Horizontal");
         v = Input.GetAxis("Vertical");
 
@@ -109,12 +111,12 @@ public class BehaviourController : MonoBehaviour
         myAnimator.SetFloat(vFloat, v, 0.1f, Time.deltaTime);
 
         sprint = Input.GetButton("Sprint"); // 버튼 지정 필요
-        if(IsSprinting())
+        if (IsSprinting())
         {
             changedFOV = true;
             camScript.SetFOV(sprintFOV);
         }
-        else if(changedFOV)
+        else if (changedFOV)
         {
             camScript.ResetFOV();
             changedFOV = false;
@@ -125,7 +127,7 @@ public class BehaviourController : MonoBehaviour
 
     public void Repositioning()
     {
-        if(lastDirection != Vector3.zero)
+        if (lastDirection != Vector3.zero)
         {
             lastDirection.y = 0f;
             Quaternion targetRotation = Quaternion.LookRotation(lastDirection);
@@ -134,13 +136,14 @@ public class BehaviourController : MonoBehaviour
         }
     }
 
-    private void FixedUpdate() {
+    private void FixedUpdate()
+    {
         bool isAnyBehaviourActive = false;
-        if(behaviourLocked > 0 || overrideBehaviours.Count == 0)
+        if (behaviourLocked > 0 || overrideBehaviours.Count == 0)
         {
-            foreach(GenericBehaviour behaviour in behaviours)
+            foreach (GenericBehaviour behaviour in behaviours)
             {
-                if(behaviour.isActiveAndEnabled && currentBehaviour == behaviour.GetBehaviourCode)
+                if (behaviour.isActiveAndEnabled && currentBehaviour == behaviour.GetBehaviourCode)
                 {
                     isAnyBehaviourActive = true;
                     behaviour.LocalFixedUpdate();
@@ -149,32 +152,143 @@ public class BehaviourController : MonoBehaviour
         }
         else
         {
-            foreach(GenericBehaviour behaviour in overrideBehaviours)
+            foreach (GenericBehaviour behaviour in overrideBehaviours)
             {
                 behaviour.LocalFixedUpdate();
             }
         }
 
-        if(!isAnyBehaviourActive && overrideBehaviours.Count == 0)
+        if (!isAnyBehaviourActive && overrideBehaviours.Count == 0)
         {
             myRigidBody.useGravity = true;
             Repositioning();
         }
     }
 
-    private void LateUpdate() 
+    private void LateUpdate()
     {
-        if(behaviourLocked > 0 || overrideBehaviours.Count == 0)
+        if (behaviourLocked > 0 || overrideBehaviours.Count == 0)
         {
-            foreach(GenericBehaviour behaviour in behaviours)
+            foreach (GenericBehaviour behaviour in behaviours)
             {
-                if(behaviour.isActiveAndEnabled && currentBehaviour == behaviour.GetBehaviourCode)
+                if (behaviour.isActiveAndEnabled && currentBehaviour == behaviour.GetBehaviourCode)
                 {
                     behaviour.LocalLateUpdate();
                 }
             }
         }
+        else
+        {
+            foreach (GenericBehaviour behaviour in overrideBehaviours)
+            {
+                behaviour.LocalLateUpdate();
+            }
+        }
     }
+
+    public void SubscribeBehaviour(GenericBehaviour behaviour)
+    {
+        behaviours.Add(behaviour);
+    }
+
+    public void RegisterDefaultBehaviour(int behaviourCode)
+    {
+        defaultBehaviour = behaviourCode;
+        currentBehaviour = behaviourCode;
+    }
+
+    public void RegisterBehaviour(int behaviourCode)
+    {
+        if (currentBehaviour == defaultBehaviour)
+        {
+            currentBehaviour = behaviourCode;
+        }
+    }
+
+    public void UnRegisterBehaviour(int behaviourCode)
+    {
+        if (currentBehaviour == behaviourCode)
+        {
+            currentBehaviour = defaultBehaviour;
+        }
+    }
+
+    public bool OverrideWithBehaviour(GenericBehaviour behaviour)
+    {
+        if (!overrideBehaviours.Contains(behaviour))
+        {
+            if (overrideBehaviours.Count == 0)
+            {
+                foreach (GenericBehaviour behaviour1 in behaviours)
+                {
+                    if (behaviour1.isActiveAndEnabled && currentBehaviour == behaviour1.GetBehaviourCode)
+                    {
+                        behaviour1.OnOverride();
+                        break;
+                    }
+                }
+            }
+            overrideBehaviours.Add(behaviour);
+            return true;
+        }
+        return false;
+    }
+
+    public bool RevokeOverridingBehaviour(GenericBehaviour behaviour)
+    {
+        if (overrideBehaviours.Contains(behaviour))
+        {
+            overrideBehaviours.Remove(behaviour);
+            return true;
+        }
+        return false;
+    }
+
+    public bool IsOverriding(GenericBehaviour behaviour = null)
+    {
+        if (behaviour == null)
+        {
+            return overrideBehaviours.Count > 0;
+        }
+        return overrideBehaviours.Contains(behaviour);
+    }
+
+    public bool IsCurrentBehaviour(int behaviourCode)
+    {
+        return currentBehaviour == behaviourCode;
+    }
+
+    public bool GetTempLockStatus(int behaviourCode = 0)
+    {
+        return (behaviourLocked != 0 && behaviourLocked != behaviourCode);
+    }
+
+    public void LockTempBehaviour(int behaviourCode)
+    {
+        if (behaviourLocked == 0)
+        {
+            behaviourLocked = behaviourCode;
+        }
+    }
+
+    public void UnLockTempBehaviour(int behaviourCode)
+    {
+        if (behaviourLocked == behaviourCode)
+        {
+            behaviourLocked = 0;
+        }
+    }
+
+    public Vector3 GetLastDirection()
+    {
+        return lastDirection;
+    }
+
+    public void SetLastDirection(Vector3 direction)
+    {
+        lastDirection = direction;
+    }
+
 }
 
 public abstract class GenericBehaviour : MonoBehaviour
