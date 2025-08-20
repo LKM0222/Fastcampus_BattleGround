@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -20,6 +21,7 @@ public class MoveBehaviour : GenericBehaviour
 
     private int jumpBool;
     private int groundedBool;
+    private bool jump;
     private bool isColliding; // 충돌 체크
     private CapsuleCollider capsuleCollider;
     private Transform myTransform;
@@ -40,6 +42,137 @@ public class MoveBehaviour : GenericBehaviour
     }
 
     // 회전
+    private Vector3 Rotating(float horizontal, float vertical)
+    {
+        Vector3 forward = behaviourController.playerCamera.TransformDirection(Vector3.forward);
 
+        forward.y = 0.0f;
+        forward = forward.normalized;
+
+        //직교하는 벡터 구함.
+        Vector3 right = new Vector3(forward.z, 0.0f, -forward.x);
+        Vector3 targetDirection = Vector3.zero;
+        targetDirection = forward * vertical + right * horizontal;
+
+        if (behaviourController.IsMoving() && targetDirection != Vector3.zero)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
+
+            // 보간 한 값을 가져옴.
+            Quaternion newRotation = Quaternion.Slerp(behaviourController.GetRigidbody.rotation, targetRotation, behaviourController.turnSmooting);
+
+            behaviourController.GetRigidbody.MoveRotation(newRotation);
+            behaviourController.SetLastDirection(targetDirection);
+        }
+
+        if (!(Mathf.Abs(horizontal) > 0.9f || Mathf.Abs(vertical) > 0.9f))
+        {
+            behaviourController.Repositioning();
+        }
+        return targetDirection;
+    }
+
+    private void RemoveVerticalVelocity()
+    {
+        Vector3 horizontalVelocity = behaviourController.GetRigidbody.velocity;
+        horizontalVelocity.y = 0.0f;
+        behaviourController.GetRigidbody.velocity = horizontalVelocity;
+    }
+
+    // 캐릭터가 이동하는 속도에 따라서 애니메이션이 변화하는 부분.
+    private void MovementManagement(float horizontal, float vertical)
+    {
+        if (behaviourController.IsGrounded())
+        {
+            behaviourController.GetRigidbody.useGravity = true;
+        }
+        else if (!behaviourController.GetAnimator.GetBool(jumpBool) && // 이 상황이면 어딘가에 껴 있는 상황임.
+                behaviourController.GetRigidbody.velocity.y > 0)        // 비정상적으로 껴있음.
+        {
+            RemoveVerticalVelocity();
+        }
+
+        Rotating(horizontal, vertical);
+        Vector2 dir = new Vector2(horizontal, vertical);
+        speed = Vector2.ClampMagnitude(dir, 1f).magnitude;
+        speedSeeker += Input.GetAxis("Mouse ScrollWheel"); // 확인 필요
+        speedSeeker = Mathf.Clamp(speedSeeker, walkSpeed, runSpeed);
+        speed *= speedSeeker;
+        if (behaviourController.IsSprinting())
+        {
+            speed = sprintSpeed;
+        }
+        behaviourController.GetAnimator.SetFloat(speedFloat, speed, speedDampTime, Time.deltaTime);
+    }
+
+    private void OnCollisionStay(Collision other)
+    {
+        isColliding = true;
+        if (behaviourController.IsCurrentBehaviour(GetBehaviourCode) && other.GetContact(0).normal.y <= 0.1f)
+        {
+            float vel = behaviourController.GetAnimator.velocity.magnitude;
+            Vector3 targetMove = Vector3.ProjectOnPlane(myTransform.forward, other.GetContact(0).normal).normalized * vel;
+            behaviourController.GetRigidbody.AddForce(targetMove, ForceMode.VelocityChange);
+        }
+    }
+
+    private void OnCollisionExit(Collision other)
+    {
+        isColliding = false;
+    }
+
+    private void JumpManagement()
+    {
+        if (jump && !behaviourController.GetAnimator.GetBool(jumpBool) && behaviourController.IsGrounded())
+        {
+            behaviourController.LockTempBehaviour(behaviourCode); //점프중엔 이동 x
+            behaviourController.GetAnimator.SetBool(jumpBool, true);
+
+            if (behaviourController.GetAnimator.GetFloat(speedFloat) > 0.1f)
+            {
+                capsuleCollider.material.dynamicFriction = 0f;
+                capsuleCollider.material.staticFriction = 0f;
+                RemoveVerticalVelocity();
+                float velocity = 2f * Mathf.Abs(Physics.gravity.y) * jumpHeight;
+                velocity = Mathf.Sqrt(velocity);
+                behaviourController.GetRigidbody.AddForce(Vector3.up * velocity, ForceMode.VelocityChange);
+            }
+        }
+        else if (behaviourController.GetAnimator.GetBool(jumpBool))
+        {
+            if (!behaviourController.IsGrounded() && !isColliding && behaviourController.GetTempLockStatus())
+            {
+                behaviourController.GetRigidbody.AddForce(
+                                        myTransform.forward * jumpInertialForce * Physics.gravity.magnitude *
+                                        sprintSpeed, ForceMode.Acceleration
+                                        );
+            }
+            if (behaviourController.GetRigidbody.velocity.y < 0f && behaviourController.IsGrounded())
+            {
+                behaviourController.GetAnimator.SetBool(groundedBool, true);
+                capsuleCollider.material.dynamicFriction = 0.6f;
+                capsuleCollider.material.staticFriction = 0.6f;
+                jump = false;
+                behaviourController.GetAnimator.SetBool(jumpBool, false);
+                behaviourController.UnLockTempBehaviour(behaviourCode);
+            }
+        }
+    }
+
+    private void Update()
+    {
+        if (!jump && Input.GetButtonDown("Jump") &&
+            behaviourController.IsCurrentBehaviour(behaviourCode) &&
+            !behaviourController.IsOverriding())
+        {
+            jump = true;
+        }
+    }
+
+    public override void LocalFixedUpdate()
+    {
+        MovementManagement(behaviourController.GetH, behaviourController.GetV);
+        JumpManagement();
+    }
 
 }
