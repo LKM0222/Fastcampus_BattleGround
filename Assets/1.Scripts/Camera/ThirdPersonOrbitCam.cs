@@ -9,6 +9,7 @@ using UnityEngine;
 /// 3. 충돌체크 = 이중 충돌 체크 기능(캐릭터 -> 카메라, 카메라 -> 캐릭터 사이)
 /// 4. 사격 반동을 위한 기능 = FOV 변경 기능
 /// </summary>
+[RequireComponent(typeof(Camera))]
 public class ThirdPersonOrbitCam : MonoBehaviour
 {
     public Transform player; // Player transform;
@@ -44,5 +45,151 @@ public class ThirdPersonOrbitCam : MonoBehaviour
         {
             return angleH;
         }
+    }
+
+    private void Awake()
+    {
+        // 캐싱
+        cameraTransform = transform;
+        myCamera = cameraTransform.GetComponent<Camera>();
+
+        // 카메라 기본 포지션 세팅
+        cameraTransform.position = player.position + Quaternion.identity * pivotOffset + Quaternion.    identity * camOffset;
+        cameraTransform.rotation = Quaternion.identity;
+
+        // 카메라 , 플레이어 간 상대 벡터 (충돌체크에 사용)
+        relCameraPos = cameraTransform.position - player.position;
+        relCameraPosMag = relCameraPos.magnitude - 0.5f;
+
+        // 기본 세팅
+        smoothPivotOffset = pivotOffset;
+        smoothCamOffset = camOffset;
+        defaultFOV = myCamera.fieldOfView;
+        angleH = player.eulerAngles.y;
+
+        ResetTargetOffsets();
+        ResetFOV();
+        ResetMaxVertialAngle();
+    }
+
+    public void ResetTargetOffsets()
+    {
+        targetPivotOffset = pivotOffset;
+        targetCamOffset = camOffset;
+    }
+
+    public void ResetFOV()
+    {
+        targetFOV = defaultFOV;
+    }
+
+    public void ResetMaxVertialAngle()
+    {
+        targetMaxVerticleAngle = maxVerticalAngle;
+    }
+    
+    public void BounceVertical(float degree)
+    {
+        recoilAngle = degree;
+    }
+
+    public void SetTargetOffset(Vector3 newPivotOffset, Vector3 newCamOffset)
+    {
+        targetPivotOffset = newPivotOffset;
+        targetCamOffset = newCamOffset;
+    }
+
+    public void SetFOV(float customFOV)
+    {
+        targetFOV = customFOV;
+    }
+
+    private bool ViewingPosCheck(Vector3 checkPos, float deltaPlayerHeight)
+    {
+        Vector3 target = player.position + (Vector3.up * deltaPlayerHeight);
+        if(Physics.SphereCast(checkPos, 0.2f, target-checkPos, out RaycastHit hit, relCameraPosMag))
+        {
+            if(hit.transform != player && !hit.transform.GetComponent<Collider>().isTrigger)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private bool ReverseViewingPosCheck(Vector3 checkPos, float deltaPlayerHeight, float maxDistance)
+    {
+        Vector3 origin = player.position + (Vector3.up * deltaPlayerHeight);
+        {
+            if(Physics.SphereCast(origin, 0.2f, checkPos - origin, out RaycastHit hit, maxDistance))
+            {
+                if(hit.transform != player && hit.transform != transform && !hit.transform.GetComponent<Collider>().isTrigger)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    private bool DoubleViewingPosCheck(Vector3 checkPos, float offset)
+    {
+        float playerFocusHeight = player.GetComponent<CapsuleCollider>().height * 0.75f;
+        return ViewingPosCheck(checkPos, playerFocusHeight) && 
+                ReverseViewingPosCheck(checkPos, playerFocusHeight, offset);
+    }
+
+    private void Update()
+    {
+        // 마우스 이동 값.
+        angleH += Mathf.Clamp(Input.GetAxis("Mouse X"), -1f, 1f) * horizontalAimingSpeed;
+        angleV += Mathf.Clamp(Input.GetAxis("Mouse Y"), -1f, 1f) * verticalAimingSpeed;
+
+        // 캐릭터 몸을 뚫거나, 캐릭터 머리를 보는 현상을 방지하기 위해 수직 이동 제한
+        angleV = Mathf.Clamp(angleV, minVerticalAngle, maxVerticalAngle);
+
+        // 수직 카메라 바운스
+        angleV = Mathf.LerpAngle(angleV, angleV + recoilAngle, 10 * Time.deltaTime);
+
+        // 카메라 회전
+        Quaternion camYRotation = Quaternion.Euler(0.0f, angleH, 0.0f);
+        Quaternion aimRotation = Quaternion.Euler(-angleV, angleH, 0.0f);
+        cameraTransform.rotation = aimRotation;
+
+        // Set Fov
+        myCamera.fieldOfView = Mathf.Lerp(myCamera.fieldOfView, targetFOV, Time.deltaTime);
+
+        Vector3 baseTempPosition = player.position + camYRotation * targetPivotOffset;
+        Vector3 noCollisionOffset = targetCamOffset; // 조준할 때 카메라 오프셋 값, 조준할 때와 평소와 다름.
+        for (float zOffset = targetCamOffset.z; zOffset <= 0;zOffset += 0.5f)
+        {
+            noCollisionOffset.z = zOffset;
+            if(DoubleViewingPosCheck(baseTempPosition + aimRotation *noCollisionOffset, 
+                Mathf.Abs(zOffset)) || zOffset == 0f)
+            {
+                break;
+            }
+        }
+
+        // Reposition Cam
+        smoothPivotOffset = Vector3.Lerp(smoothPivotOffset, targetCamOffset, smooth * Time.deltaTime);
+        smoothCamOffset = Vector3.Lerp(smoothCamOffset, noCollisionOffset, smooth * Time.deltaTime);
+
+        cameraTransform.position = player.position + camYRotation * smoothPivotOffset +
+                                    aimRotation * smoothCamOffset;
+        
+        if(recoilAngle > 0f)
+        {
+            recoilAngle -= recoilAngleBound * Time.deltaTime;
+        }
+        else if (recoilAngle < 0f)
+        {
+            recoilAngle += recoilAngleBound * Time.deltaTime;
+        }
+    }
+
+    public float GetCurrentPivotMagnitude(Vector3 finalPivotOffset)
+    {
+        return Mathf.Abs((finalPivotOffset - smoothPivotOffset).magnitude);
     }
 }
