@@ -27,7 +27,7 @@ namespace FC
             Default = 0,
             TransparentFX = 1,
             IgnoreRayCast = 2,
-            Water  = 4,
+            Water = 4,
             UI = 5,
             Cover = 8,
             IgnoreShot = 9,
@@ -36,7 +36,23 @@ namespace FC
             Enemy = 12,
             Bound = 13,
             Environment = 14,
-            
+
+        }
+
+        public class LayerMasking
+        {
+            public const int Default = 1 << 0;
+            public const int TransparentFX = 1 << 1;
+            public const int IgnoreRayCast = 1 << 2;
+            public const int Water = 1 << 4;
+            public const int UI = 1 << 5;
+            public const int Cover = 1 << 8;
+            public const int IgnoreShot = 1 << 9;
+            public const int CoverInvisible = 1 << 10;
+            public const int Player = 1 << 11;
+            public const int Enemy = 1 << 12;
+            public const int Bound = 1 << 13;
+            public const int Environment = 1 << 14;
         }
 
         public static int GetLayerByName(string layerName)

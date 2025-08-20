@@ -141,7 +141,7 @@ public class InteractiveWeapon : MonoBehaviour
 
     private void Update()
     {
-        if (pickable && Input.GetKeyDown("Pick"))
+        if (pickable && Input.GetButtonDown("Interact"))
         {
             //disable physics weapon
             weaponRigidbody.isKinematic = true;
