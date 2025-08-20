@@ -20,6 +20,7 @@ public class BehaviourController : MonoBehaviour
     private Animator myAnimator;
     private Rigidbody myRigidBody;
     private ThirdPersonOrbitCam camScript;
+    private Transform myTransform;
 
     // 속성
     private float h; // horizontal axis
@@ -40,6 +41,140 @@ public class BehaviourController : MonoBehaviour
     public Rigidbody GetRigidbody { get => myRigidBody; }
     public Animator GetAnimator { get => myAnimator; }
     public int GetDefaultBehaviour { get => defaultBehaviour; }
+
+    private void Awake() {
+        behaviours = new List<GenericBehaviour>();
+        overrideBehaviours = new List<GenericBehaviour>();
+        myAnimator = GetComponent<Animator>();
+        hFloat = Animator.StringToHash("Horizontal");
+        vFloat = Animator.StringToHash("Vertical");
+        camScript = playerCamera.GetComponent<ThirdPersonOrbitCam>();
+        myRigidBody = GetComponent<Rigidbody>();
+        myTransform = transform;
+
+        // ground?
+        groundedBool = Animator.StringToHash("Grounded");
+        colExtents = GetComponent<Collider>().bounds.extents;
+    }
+
+    public bool IsMoving()
+    {   
+        // 실수가 가질 수 있는 가장 최소의 값 = Epsilon
+        // h > 0 || v > 0 과 같지만 아래가 더 안정적임.
+        return Mathf.Abs(h) > Mathf.Epsilon || Mathf.Abs(v) > Mathf.Epsilon;
+    }
+
+    public bool IsHorizontalMoving()
+    {
+        return Mathf.Abs(h) > Mathf.Epsilon;
+    }
+
+    public bool CanSprint()
+    {
+        foreach(GenericBehaviour behaviour in behaviours)
+        {
+            if(!behaviour.AllowSprint)
+            {
+                return false;
+            }
+        }
+
+        foreach(GenericBehaviour behaviour in overrideBehaviours)
+        {
+            if(!behaviour.AllowSprint)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public bool IsSprinting()
+    {
+        return sprint && IsMoving() && IsSprinting();
+    }
+
+    public bool IsGrounded()
+    {
+        Ray ray = new Ray(myTransform.position + Vector3.up * 2 * colExtents.x, Vector3.down);
+        return Physics.SphereCast(ray, colExtents.x, colExtents.x + 0.2f);
+    }
+
+    private void Update() {
+        h = Input.GetAxis("Horizontal");
+        v = Input.GetAxis("Vertical");
+
+        myAnimator.SetFloat(hFloat, h, 0.1f, Time.deltaTime);
+        myAnimator.SetFloat(vFloat, v, 0.1f, Time.deltaTime);
+
+        sprint = Input.GetButton("Sprint"); // 버튼 지정 필요
+        if(IsSprinting())
+        {
+            changedFOV = true;
+            camScript.SetFOV(sprintFOV);
+        }
+        else if(changedFOV)
+        {
+            camScript.ResetFOV();
+            changedFOV = false;
+        }
+
+        myAnimator.SetBool(groundedBool, IsGrounded());
+    }
+
+    public void Repositioning()
+    {
+        if(lastDirection != Vector3.zero)
+        {
+            lastDirection.y = 0f;
+            Quaternion targetRotation = Quaternion.LookRotation(lastDirection);
+            Quaternion newRotation = Quaternion.Slerp(myRigidBody.rotation, targetRotation, turnSmooting);
+            myRigidBody.MoveRotation(newRotation);
+        }
+    }
+
+    private void FixedUpdate() {
+        bool isAnyBehaviourActive = false;
+        if(behaviourLocked > 0 || overrideBehaviours.Count == 0)
+        {
+            foreach(GenericBehaviour behaviour in behaviours)
+            {
+                if(behaviour.isActiveAndEnabled && currentBehaviour == behaviour.GetBehaviourCode)
+                {
+                    isAnyBehaviourActive = true;
+                    behaviour.LocalFixedUpdate();
+                }
+            }
+        }
+        else
+        {
+            foreach(GenericBehaviour behaviour in overrideBehaviours)
+            {
+                behaviour.LocalFixedUpdate();
+            }
+        }
+
+        if(!isAnyBehaviourActive && overrideBehaviours.Count == 0)
+        {
+            myRigidBody.useGravity = true;
+            Repositioning();
+        }
+    }
+
+    private void LateUpdate() 
+    {
+        if(behaviourLocked > 0 || overrideBehaviours.Count == 0)
+        {
+            foreach(GenericBehaviour behaviour in behaviours)
+            {
+                if(behaviour.isActiveAndEnabled && currentBehaviour == behaviour.GetBehaviourCode)
+                {
+                    behaviour.LocalLateUpdate();
+                }
+            }
+        }
+    }
 }
 
 public abstract class GenericBehaviour : MonoBehaviour
