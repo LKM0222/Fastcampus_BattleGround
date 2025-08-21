@@ -76,6 +76,7 @@ public class StateController : MonoBehaviour
 
     public void TransitionToState(State nextState, Decision decision)
     {
+        // decision 에서 nextState로 넘어가라 
         if (nextState != remainState) // 현재 스테이트 유지중인지 확인
         {
             currentState = nextState;

@@ -2,17 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Transition : MonoBehaviour
-{
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+[System.Serializable]
+public class Transition
+{
+    public Decision decision; // 상태 결정 
+    public State trueState; // true일때 상태
+    public State falseState;  // false일때 상태 
+
 }
