@@ -11,6 +11,8 @@ using UnityEngine.UI;
 /// 관련해서 UI도 컨트롤 할 수 있고,
 /// ShootBehaviour에 획득한 무기를 넣어줌.
 /// </summary>
+
+[System.Serializable]
 public class InteractiveWeapon : MonoBehaviour
 {
     public string label_weaponName; // 무기 이름.

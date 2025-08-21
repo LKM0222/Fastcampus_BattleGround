@@ -26,20 +26,21 @@ public class PlayerHealth : HealthBase
     private float originalBarScale;
     private bool critical;
 
-    private void Awake() 
+    private void Awake()
     {
         myAnimator = GetComponent<Animator>();
         totalHealth = health;
 
         healthBar = healthHUD.Find($"HealthBar/Bar").GetComponent<RectTransform>();
-        placeHolderBar = healthHUD.Find($"HealthBar/PlaceHolder").GetComponent<RectTransform>();
+        placeHolderBar = healthHUD.Find($"HealthBar/Placeholder").GetComponent<RectTransform>();
         healthLabel = healthHUD.Find($"HealthBar/Label").GetComponent<Text>();
         originalBarScale = healthBar.sizeDelta.x;
         healthLabel.text = "" + (int)health;
     }
 
-    private void Update() {
-        if(placeHolderBar.sizeDelta.x > healthBar.sizeDelta.x)
+    private void Update()
+    {
+        if (placeHolderBar.sizeDelta.x > healthBar.sizeDelta.x)
         {
             placeHolderBar.sizeDelta = Vector2.Lerp(placeHolderBar.sizeDelta, healthBar.sizeDelta,
                 2f * Time.deltaTime);
@@ -48,7 +49,7 @@ public class PlayerHealth : HealthBase
 
     public bool IsFullLife()
     {
-        return Mathf.Abs(health - totalHealth) < float.Epsilon; 
+        return Mathf.Abs(health - totalHealth) < float.Epsilon;
     }
 
     private void UpdateHealthBar()
@@ -69,7 +70,7 @@ public class PlayerHealth : HealthBase
         myAnimator.SetBool("Cover", false);
         myAnimator.SetFloat("Speed", 0f);
 
-        foreach(GenericBehaviour behaviour in GetComponentsInChildren<GenericBehaviour>())
+        foreach (GenericBehaviour behaviour in GetComponentsInChildren<GenericBehaviour>())
         {
             behaviour.enabled = false;
         }
@@ -83,11 +84,11 @@ public class PlayerHealth : HealthBase
 
         UpdateHealthBar();
 
-        if(health <= 0)
+        if (health <= 0)
         {
             Kill();
         }
-        else if(health<= criticalHealth && !critical)
+        else if (health <= criticalHealth && !critical)
         {
             critical = true;
         }

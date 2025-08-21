@@ -33,7 +33,7 @@ public class ShootBehaviour : GenericBehaviour
     public Vector3 leftArmShortAim = new Vector3(-4.0f, 0.0f, 2.0f);
 
 
-    private int activeWeapon = 0;
+    [SerializeField] private int activeWeapon = 0;
     // animator value
     private int weaponType;
     private int changeWeaponTrigger;
@@ -41,7 +41,7 @@ public class ShootBehaviour : GenericBehaviour
     private int aimBool, blockedAimBool, reloadBool;
 
 
-    private List<InteractiveWeapon> weapons; // 소지하고 있는 무기들.
+    [SerializeField] private List<InteractiveWeapon> weapons; // 소지하고 있는 무기들.
     private bool isAiming, isAimBlocked;
 
     private Transform gunMuzzle;
@@ -123,18 +123,18 @@ public class ShootBehaviour : GenericBehaviour
         instantShot.transform.rotation = Quaternion.LookRotation(destination - origin);
         instantShot.transform.parent = shot.transform.parent;
 
-        if(placeSparks)
+        if (placeSparks)
         {
             GameObject instantSpark = EffectManager.Instance.EffectOneShot((int)EffectList.sparks, destination);
             instantSpark.SetActive(true);
             instantSpark.transform.parent = sparks.transform.parent;
         }
 
-        if(placeBulletHole)
+        if (placeBulletHole)
         {
             Quaternion hitRotation = Quaternion.FromToRotation(Vector3.back, targetNormal);
             GameObject bullet = null;
-            if(bulletHoles.Count < maxBulletHoles)
+            if (bulletHoles.Count < maxBulletHoles)
             {
                 bullet = GameObject.CreatePrimitive(PrimitiveType.Quad);
                 bullet.GetComponent<MeshRenderer>().material = bulletHole;
@@ -174,14 +174,14 @@ public class ShootBehaviour : GenericBehaviour
             Ray ray = new Ray(behaviourController.playerCamera.position,
                 behaviourController.playerCamera.forward + impercision);
             RaycastHit hit = default(RaycastHit);
-            if(Physics.Raycast(ray, out hit, 500f, shotMask)) // 총을 쐈을 떄 맞은게 있다면 
+            if (Physics.Raycast(ray, out hit, 500f, shotMask)) // 총을 쐈을 떄 맞은게 있다면 
             {
-                if(hit.collider.transform != transform)
+                if (hit.collider.transform != transform)
                 {
                     bool isOrganic = (organicMask == (organicMask | (1 << hit.transform.root.gameObject.layer)));
                     DrawShoot(weapons[weapon].gameObject, hit.point, hit.normal, hit.collider.transform,
                         !isOrganic, !isOrganic);
-                    if(hit.collider)
+                    if (hit.collider)
                     {
                         hit.collider.SendMessageUpwards("HitCallback", new HealthBase.DamageInfo(
                             hit.point, ray.direction, weapons[weapon].bulletDamage, hit.collider),
@@ -211,7 +211,7 @@ public class ShootBehaviour : GenericBehaviour
 
     private void SetWeaponCrossHair(bool armd)
     {
-        if(armd)
+        if (armd)
         {
             aimBehaviour.crossHair = aimCrossHair;
         }
@@ -223,30 +223,30 @@ public class ShootBehaviour : GenericBehaviour
 
     private void ShotProgress()
     {
-        if(shotInterval > 0.2f)
+        if (shotInterval > 0.2f)
         {
             shotInterval -= shootRateFactor * Time.deltaTime;
-            if(shotInterval <= 0.4f)
+            if (shotInterval <= 0.4f)
             {
                 SetWeaponCrossHair(activeWeapon > 0);
                 muzzleFlash.SetActive(false);
-                if ( activeWeapon > 0 )
+                if (activeWeapon > 0)
                 {
                     behaviourController.GetCamScript.BounceVertical(-weapons[activeWeapon].recoilAngle * 0.1f);
 
-                    if(shotInterval <= (0.4f - 2f * Time.deltaTime))
+                    if (shotInterval <= (0.4f - 2f * Time.deltaTime))
                     {
-                        if(weapons[activeWeapon].weaponMode == InteractiveWeapon.WeaponMode.AUTO &&
+                        if (weapons[activeWeapon].weaponMode == InteractiveWeapon.WeaponMode.AUTO &&
                             Input.GetAxisRaw("Shot") != 0)
                         {
                             ShootWeapon(activeWeapon, false);
                         }
-                        else if(weapons[activeWeapon].weaponMode == InteractiveWeapon.WeaponMode.BURST &&
+                        else if (weapons[activeWeapon].weaponMode == InteractiveWeapon.WeaponMode.BURST &&
                             burstShotCount < weapons[activeWeapon].burstSize)
                         {
                             ShootWeapon(activeWeapon, false);
                         }
-                        else if(weapons[activeWeapon].weaponMode != InteractiveWeapon.WeaponMode.BURST)
+                        else if (weapons[activeWeapon].weaponMode != InteractiveWeapon.WeaponMode.BURST)
                         {
                             burstShotCount = 0;
                         }
@@ -264,19 +264,19 @@ public class ShootBehaviour : GenericBehaviour
 
     private void ChangeWeapon(int oldWeapon, int newWeapon)
     {
-        if(oldWeapon > 0)
+        if (oldWeapon > 0)
         {
             weapons[oldWeapon].gameObject.SetActive(false);
             gunMuzzle = null;
             weapons[oldWeapon].Toggle(false);
         }
 
-        while(weapons[newWeapon] == null && newWeapon > 0)
+        while (weapons[newWeapon] == null && newWeapon > 0)
         {
             newWeapon = (newWeapon + 1) % weapons.Count;
         }
 
-        if(newWeapon > 0)
+        if (newWeapon > 0)
         {
             weapons[newWeapon].gameObject.SetActive(false);
             gunMuzzle = weapons[newWeapon].transform.Find("muzzle");
@@ -285,7 +285,7 @@ public class ShootBehaviour : GenericBehaviour
 
         activeWeapon = newWeapon;
 
-        if(oldWeapon != newWeapon)
+        if (oldWeapon != newWeapon)
         {
             behaviourController.GetAnimator.SetTrigger("ChangeWeapon");
             behaviourController.GetAnimator.SetInteger("Weapon", weapons[newWeapon] ?
@@ -297,26 +297,26 @@ public class ShootBehaviour : GenericBehaviour
 
     private void Update()
     {
-        float shootTrigger = Mathf.Abs(Input.GetAxisRaw("Shot"));
-        if(shootTrigger > Mathf.Epsilon && !isShooting && activeWeapon > 0 && burstShotCount == 0)
+        float shootTrigger = Mathf.Abs(Input.GetAxisRaw("Fire1"));
+        if (shootTrigger > Mathf.Epsilon && !isShooting && activeWeapon > 0 && burstShotCount == 0)
         {
             isShooting = true;
             ShootWeapon(activeWeapon);
         }
-        else if(isShooting && shootTrigger < Mathf.Epsilon)
+        else if (isShooting && shootTrigger < Mathf.Epsilon)
         {
             isShooting = false;
         }
-        else if(Input.GetButtonUp("Reload") && activeWeapon>0)
+        else if (Input.GetButtonUp("Reload") && activeWeapon > 0)
         {
-            if(weapons[activeWeapon].StartReload())
+            if (weapons[activeWeapon].StartReload())
             {
                 SoundManager.Instance.PlayOneShotEffect((int)weapons[activeWeapon].reloadSound,
                     gunMuzzle.position, 0.5f);
                 behaviourController.GetAnimator.SetBool(reloadBool, true);
             }
         }
-        else if(Input.GetButtonDown("Drop") && activeWeapon > 0)
+        else if (Input.GetButtonDown("Drop") && activeWeapon > 0)
         {
             EndReloadWeapon();
             int weaponToDrop = activeWeapon;
@@ -326,19 +326,19 @@ public class ShootBehaviour : GenericBehaviour
         }
         else
         {
-            if(Mathf.Abs(Input.GetAxisRaw("Change")) > Mathf.Epsilon && !isChangingWeapon)
+            if (Mathf.Abs(Input.GetAxisRaw("Change")) > Mathf.Epsilon && !isChangingWeapon)
             {
                 isChangingWeapon = true;
                 int nextWeapon = activeWeapon + 1;
                 ChangeWeapon(activeWeapon, nextWeapon % weapons.Count);
             }
-            else if(Mathf.Abs(Input.GetAxisRaw("Change")) < Mathf.Epsilon)
+            else if (Mathf.Abs(Input.GetAxisRaw("Change")) < Mathf.Epsilon)
             {
                 isChangingWeapon = false;
             }
         }
 
-        if(isShotAlive)
+        if (isShotAlive)
         {
             ShotProgress();
         }
@@ -356,9 +356,9 @@ public class ShootBehaviour : GenericBehaviour
         newWeapon.transform.localPosition = newWeapon.rightHandPosition;
         newWeapon.transform.localRotation = Quaternion.Euler(newWeapon.relativeRotation);
 
-        if(weapons[slotMap[newWeapon.weaponType]])
+        if (weapons[slotMap[newWeapon.weaponType]])
         {
-            if(weapons[slotMap[newWeapon.weaponType]].label_weaponName == newWeapon.label_weaponName)
+            if (weapons[slotMap[newWeapon.weaponType]].label_weaponName == newWeapon.label_weaponName)
             {
                 weapons[slotMap[newWeapon.weaponType]].ResetBullet();
                 ChangeWeapon(activeWeapon, slotMap[newWeapon.weaponType]);
@@ -382,14 +382,14 @@ public class ShootBehaviour : GenericBehaviour
         behaviourController.GetAnimator.SetBool(blockedAimBool, isAimBlocked);
         Debug.DrawRay(transform.position + castRelativeOrigin, behaviourController.GetCamScript.transform.forward * distToHand,
             isAimBlocked ? Color.red : Color.cyan);
-        return isAimBlocked; 
+        return isAimBlocked;
     }
 
-    private void OnAnimatorIK(int layerIndex) 
+    private void OnAnimatorIK(int layerIndex)
     {
-        if(isAiming &&activeWeapon > 0)
+        if (isAiming && activeWeapon > 0)
         {
-            if(CheckforBlockedAim())
+            if (CheckforBlockedAim())
             {
                 return;
             }
@@ -403,7 +403,7 @@ public class ShootBehaviour : GenericBehaviour
 
             float xcamRot = Quaternion.LookRotation(behaviourController.playerCamera.forward).eulerAngles.x;
             targetRot = Quaternion.AngleAxis(xcamRot + armsRotation, transform.right);
-            if(weapons[activeWeapon] && weapons[activeWeapon].weaponType == InteractiveWeapon.WeaponType.LONG)
+            if (weapons[activeWeapon] && weapons[activeWeapon].weaponType == InteractiveWeapon.WeaponType.LONG)
             {
                 targetRot *= Quaternion.AngleAxis(9f, transform.right);
                 targetRot *= Quaternion.AngleAxis(20f, transform.up);
@@ -417,9 +417,9 @@ public class ShootBehaviour : GenericBehaviour
         }
     }
 
-    private void LateUpdate() 
+    private void LateUpdate()
     {
-        if(isAiming && weapons[activeWeapon] && 
+        if (isAiming && weapons[activeWeapon] &&
             weapons[activeWeapon].weaponType == InteractiveWeapon.WeaponType.SHORT)
         {
             leftArm.localEulerAngles = leftArm.localEulerAngles + leftArmShortAim;
