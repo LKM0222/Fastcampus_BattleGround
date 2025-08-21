@@ -91,4 +91,104 @@ public class CoverLookUp : MonoBehaviour
         }
         return bounds.ToArray();
     }
+
+    public void Setup(LayerMask coverMask)
+    {
+        covers = GetObjectsInLayerMask(coverMask);
+
+        coverHashCodes = new List<int>();
+        allCoverSpots = new List<Vector3[]>();
+        foreach (GameObject cover in covers)
+        {
+            allCoverSpots.Add(GetSpots(cover, coverMask));
+            coverHashCodes.Add(cover.GetHashCode());
+        }
+    }
+
+    // 경로 안에 타겟이 있는지
+    // 목표물이 경로에 있는지 확인, 대상이 볼 수 있는 각도 안에 있고, spot보다 가까이 있는지
+    private bool TargetInPath(Vector3 origin, Vector3 spot, Vector3 target, float angle)
+    {
+        Vector3 dirToTarget = (target - origin).normalized;
+        Vector3 dirToSpot = (spot - origin).normalized;
+
+        if (Vector3.Angle(dirToSpot, dirToTarget) <= angle)
+        {
+            float targetDist = (target - origin).sqrMagnitude;
+            float spotDist = (spot - origin).sqrMagnitude;
+            return (targetDist <= spotDist);
+        }
+        return false;
+    }
+
+    // 가장 가까운 유효한 지점을 찾아줌. 거리도 같이 줌.
+    private ArrayList FillterSpots(StateController controller)
+    {
+        float minDist = Mathf.Infinity;
+        filteredSpots = new Dictionary<float, Vector3>();
+        int nextCoverHash = -1;
+        for (int i = 0; i < allCoverSpots.Count; i++)
+        {
+            if (!covers[i].activeSelf || coverHashCodes[i] == controller.coverHash)
+            {
+                continue;
+            }
+            foreach (Vector3 spot in allCoverSpots[i])
+            {
+                Vector3 vectorDist = controller.personalTarget - spot;
+                float searchDist = (controller.transform.position - spot).sqrMagnitude;
+
+                if (vectorDist.sqrMagnitude <= controller.viewRadius * controller.viewRadius &&
+                    Physics.Raycast(spot, vectorDist, out RaycastHit hit, vectorDist.sqrMagnitude, controller.generalStats.coverMask))
+                {
+                    //플레이어가 npc와 스팟 사이에 있지 않은지 확인하고, 보이는 각도의 1/4 각을 사용
+                    // 타겟보다 멀리 있는건 거름.
+                    if (hit.collider == covers[i].GetComponent<Collider>() &&
+                        !TargetInPath(controller.transform.position, spot, controller.personalTarget, controller.viewAngle / 4))
+                    {
+                        if (!filteredSpots.ContainsKey(searchDist))
+                        {
+                            filteredSpots.Add(searchDist, spot);
+                        }
+                        else
+                        {
+                            continue;
+                        }
+
+                        if (minDist > searchDist)
+                        {
+                            minDist = searchDist;
+                            nextCoverHash = coverHashCodes[i];
+                        }
+                    }
+                }
+            }
+        }
+
+        ArrayList returnArray = new ArrayList();
+        returnArray.Add(nextCoverHash);
+        returnArray.Add(minDist);
+        return returnArray;
+    }
+
+    public ArrayList GetBestCoverSpot(StateController controller)
+    {
+        ArrayList nextCoverData = FillterSpots(controller);
+        int nextCoverHash = (int)nextCoverData[0];
+        float minDist = (float)nextCoverData[1];
+
+        ArrayList returnArray = new ArrayList();
+        if (filteredSpots.Count == 0)
+        {
+            returnArray.Add(-1);
+            returnArray.Add(Vector3.positiveInfinity);
+        }
+        else
+        {
+            returnArray.Add(nextCoverHash);
+            returnArray.Add(filteredSpots[minDist]);
+        }
+
+        return returnArray;
+    }
 }
