@@ -20,14 +20,14 @@ public abstract class Decision : ScriptableObject
 
     public static bool CheckTargetInRadius(StateController controller, float radius, HandleTargets handleTargets)
     {
-        if (controller.aimTarget.root.GetComponent<HealthBase>().isDead)
+        if (controller.aimTarget.root.GetComponent<HealthBase>().isDead) // 타겟이 죽은 경우,
         {
             return false;
         }
         else
         {
             Collider[] targetsInRadius = Physics.OverlapSphere(controller.transform.position, radius, controller.generalStats.targetMask);
-            return handleTargets(controller, targetsInRadius.Length > 0, targetsInRadius);
+            return handleTargets(controller, targetsInRadius.Length > 0, targetsInRadius); // 특정 위치에서 충돌체를 찾아서 0보다 크다면 플레이어를 찾은것.
         }
     }
 }
