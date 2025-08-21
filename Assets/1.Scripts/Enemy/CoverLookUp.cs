@@ -15,7 +15,7 @@ public class CoverLookUp : MonoBehaviour
     private List<Vector3[]> allCoverSpots; // 모든 커버 스팟
     private GameObject[] covers;
     private List<int> coverHashCodes; // Cover unity Id;
-    private Dictionary<float, Vector3> filteredSpots; // npc로 부터 특정 오브젝트에서 멀어지거나 하는것들 (제외할 스팟)
+    private Dictionary<float, Vector3> filteredSpots; // npc로 부터 특정 오브젝트에서 멀어지거나 하는것들 (제외할 스팟) // 필터링 된 스팟
 
     // 현재 씬에서 특정 레이어를 가진 오브젝트 전체를 가져오는 함수.
     private GameObject[] GetObjectsInLayerMask(int layerMask)
