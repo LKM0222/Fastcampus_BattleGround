@@ -74,6 +74,38 @@ public class StateController : MonoBehaviour
         set { coverSpot[GetHashCode()] = value; }
     }
 
+    public bool Strafing
+    {
+        get => strafing;
+        set
+        {
+            enemyAnimation.anim.SetBool("Strafe", value);
+            strafing = value;
+        }
+    }
+
+    public bool Aiming
+    {
+        get => aiming;
+        set
+        {
+            if (aiming != value)
+            {
+                enemyAnimation.anim.SetBool("Aim", value);
+                aiming = value;
+            }
+        }
+    }
+
+    public IEnumerator UnstuckAim(float delay)
+    {
+        yield return new WaitForSeconds(delay * 0.5f);
+        Aiming = false;
+        yield return new WaitForSeconds(delay * 0.5f);
+        Aiming = true;
+    }
+
+    //Function
     public void TransitionToState(State nextState, Decision decision)
     {
         // decision 에서 nextState로 넘어가라 
