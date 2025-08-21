@@ -109,7 +109,7 @@ public class ShootBehaviour : GenericBehaviour
         distToHand = (rightHand.position - neck.position).magnitude * 1.5f;
     }
 
-    private void DrawShoot(GameObject weapon, Vector3 destination, Vector3 targetNormal, Transform parent, bool plackSparks = true, bool placeBulletHole = true)
+    private void DrawShoot(GameObject weapon, Vector3 destination, Vector3 targetNormal, Transform parent, bool placeSparks = true, bool placeBulletHole = true)
     {
         Vector3 origin = gunMuzzle.position - gunMuzzle.right * 0.5f;
 
@@ -123,9 +123,80 @@ public class ShootBehaviour : GenericBehaviour
         instantShot.transform.rotation = Quaternion.LookRotation(destination - origin);
         instantShot.transform.parent = shot.transform.parent;
 
-        GameObject instantSpark = EffectManager.Instance.EffectOneShot((int)EffectList.sparks, destination);
-        instantSpark.SetActive(true);
-        instantSpark.transform.parent = sparks.transform.parent;
+        if(placeSparks)
+        {
+            GameObject instantSpark = EffectManager.Instance.EffectOneShot((int)EffectList.sparks, destination);
+            instantSpark.SetActive(true);
+            instantSpark.transform.parent = sparks.transform.parent;
+        }
+
+        if(placeBulletHole)
+        {
+            Quaternion hitRotation = Quaternion.FromToRotation(Vector3.back, targetNormal);
+            GameObject bullet = null;
+            if(bulletHoles.Count < maxBulletHoles)
+            {
+                bullet = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                bullet.GetComponent<MeshRenderer>().material = bulletHole;
+                bullet.GetComponent<Collider>().enabled = false;
+                bullet.transform.localScale = Vector3.one * 0.07f;
+                bullet.name = "Bullet Hole";
+                bulletHoles.Add(bullet);
+            }
+            else
+            {
+                bullet = bulletHoles[bulletHoleSlot];
+                bulletHoleSlot++;
+                bulletHoleSlot %= maxBulletHoles;
+            }
+            bullet.transform.position = destination + 0.01f * targetNormal;
+            bullet.transform.rotation = hitRotation;
+            bullet.transform.SetParent(parent);
+        }
+    }
+
+    private void ShotWeapon(int weapon, bool firstShot = true)
+    {
+        if (!isAiming || isAimBlocked || behaviourController.GetAnimator.GetBool("Reload")
+            || !weapons[weapon].Shoot(firstShot))
+        {
+            return;
+        }
+        else
+        {
+            brustShotCount++;
+            behaviourController.GetAnimator.SetTrigger("Shooting");
+            aimBehaviour.crossHair = shootCrossHair;
+            behaviourController.GetCamScript.BounceVertical(weapons[weapon].recoilAngle);
+
+            Vector3 impercision = Random.Range(-shootErrorRate, shootErrorRate)
+                * behaviourController.playerCamera.forward;
+            Ray ray = new Ray(behaviourController.playerCamera.position,
+                behaviourController.playerCamera.forward + impercision);
+            RaycastHit hit = default(RaycastHit);
+            if(Physics.Raycast(ray, out hit, 500f, shotMask)) // 총을 쐈을 떄 맞은게 있다면 
+            {
+                if(hit.collider.transform != transform)
+                {
+                    bool isOrganic = (organicMask == (organicMask | (1 << hit.transform.root.gameObject.layer)));
+                    DrawShoot(weapons[weapon].gameObject, hit.point, hit.normal, hit.collider.transform,
+                        !isOrganic, !isOrganic);
+                    if(hit.collider)
+                    {
+                        hit.collider.SendMessageUpwards("HitCallback", new HealthBase.DamageInfo(
+                            hit.point, ray.direction, weapons[weapon].bulletDamage, hit.collider),
+                            SendMessageOptions.DontRequireReceiver);
+                    }
+                }
+            }
+            else // 총이 빗나갔다면
+            {
+                Vector3 destination = (ray.direction * 500f) - ray.origin;
+                DrawShoot(weapons[weapon].gameObject, destination, Vector3.up, null, false, false);
+            }
+
+            SoundManager.Instance.PlayEffectSound((int)weapons[weapon].shotSound)
+        }
     }
 
 

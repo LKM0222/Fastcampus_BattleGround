@@ -14,7 +14,7 @@ using UnityEngine.UI;
 public class InteractiveWeapon : MonoBehaviour
 {
     public string label_weaponName; // 무기 이름.
-    public SoundList shotSount, reloadSound, pickSound, dropSound, noBulletSound;
+    public SoundList shotSound, reloadSound, pickSound, dropSound, noBulletSound;
     public Sprite weaponSprite;
     public Vector3 rightHandPosition; // 플레이어 오른손의 보정 위치
     public Vector3 relativeRotation; // 플레이어 맞춘 보정을 위한 회전값.
