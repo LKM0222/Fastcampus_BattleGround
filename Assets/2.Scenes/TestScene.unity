@@ -309,6 +309,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 614503159}
+    - targetCorrespondingSourceObject: {fileID: 1513220350763136, guid: 325c2a72f558d4e419ec4f9ea74e54f5,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 614503163}
   m_SourcePrefab: {fileID: 100100000, guid: 325c2a72f558d4e419ec4f9ea74e54f5, type: 3}
 --- !u!1 &614503156 stripped
 GameObject:
@@ -408,6 +412,35 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 614503155}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &614503163
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 614503156}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7d4532f01480334abaf53579cb8c154, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  aimCrossHair: {fileID: 2800000, guid: 8e5c3bac4b251b743bd237d3611bd2dc, type: 3}
+  shootCrossHair: {fileID: 2800000, guid: 258df40256fd8694b9549943351b9257, type: 3}
+  muzzleFlash: {fileID: 0}
+  shot: {fileID: 0}
+  sparks: {fileID: 0}
+  bulletHole: {fileID: 0}
+  maxBulletHoles: 50
+  shootErrorRate: 0.01
+  shootRateFactor: 1
+  armsRotation: 8
+  shotMask:
+    serializedVersion: 2
+    m_Bits: 51
+  organicMask:
+    serializedVersion: 2
+    m_Bits: 0
+  leftArmShortAim: {x: -4, y: 0, z: 2}
 --- !u!1 &1308521975
 GameObject:
   m_ObjectHideFlags: 0
