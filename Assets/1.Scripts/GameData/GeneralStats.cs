@@ -13,7 +13,7 @@ public class GeneralStats : ScriptableObject
     public float patrolSpeed = 2f; //npc 정찰 속도 clear state(평상시)
     public float chaseSpeed = 5f; //npc 따라오는 속도
     public float evadeSpeed = 15f; //npc 회피속도 (engage state 교전중)
-    private float patrolWaitTime = 2f; // 웨이포인트에서 대기하는 시간
+    public float patrolWaitTime = 2f; // 웨이포인트에서 대기하는 시간
 
     [Header("Animation")]
     public LayerMask obstacleMask; // 장애물 레이어 마스크

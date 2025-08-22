@@ -61,14 +61,86 @@ public class AttackAction : Action
             }
         }
 
-        SoundManager.Instance.PlayOneShotEffect((int)SoundList.pistol,
+        // 여기서는 클래스에 따라 사운드가 다르게 출력되어야함.
+        SoundManager.Instance.PlayShotSound(controller.classID, 
             controller.enemyAnimation.gunMuzzle.position, 2f);
     }
 
+    private void CastShot(StateController controller)
+    {
+        // 오발율
+        Vector3 imprecision = Random.Range(-controller.classStats.ShotErrorRate,
+            controller.classStats.ShotErrorRate) * controller.transform.right;
+        imprecision += Random.Range(-controller.classStats.ShotErrorRate,
+            controller.classStats.ShotErrorRate) * controller.transform.up;
 
+        Vector3 shotDirection = controller.personalTarget - controller.enemyAnimation.gunMuzzle.position;
+        shotDirection = shotDirection.normalized + imprecision;
+
+        Ray ray = new Ray(controller.enemyAnimation.gunMuzzle.position, shotDirection);
+        if(Physics.Raycast(ray, out RaycastHit hit, controller.viewRadius,
+            controller.generalStats.shotMask.value))
+        {
+            bool isOrganic = ((1 << hit.transform.root.gameObject.layer) &
+                controller.generalStats.targetMask) != 0;
+            DoShot(controller, ray.direction, hit.point, hit.normal, isOrganic, hit.transform);
+        }
+        else
+        {
+            DoShot(controller, ray.direction, ray.origin + (ray.direction * 500f));
+        }
+    }
+
+    private bool CanShoot(StateController controller)
+    {
+        float distance = (controller.personalTarget -
+            controller.enemyAnimation.gunMuzzle.position).sqrMagnitude;
+
+        // 사격 거리가 괜찮고, 조준중이고, 각도 안에 들어와있고 가까울 때
+        if(controller.Aiming && 
+            (controller.enemyAnimation.currentAnimingAngleGap < aimAngleGap || 
+            distance <= 5.0f))
+        {   
+            // 발사 할 수 있는 딜레이만큼 충분히 지났다면 발사.
+            if(controller.variables.startShootTimer >= startShootDelay)
+            {
+                return true;
+            }
+            else // 아니라면 딜레이 기다림.
+            {
+                controller.variables.startShootTimer += Time.deltaTime;
+            }
+        }
+
+        return false;
+    }
+
+    private void Shoot(StateController controller)
+    {
+        if(Time.timeScale > 0 && controller.variables.shotTimer == 0f)
+        {
+            controller.enemyAnimation.anim.SetTrigger("Shoot");
+            CastShot(controller);
+        }
+        else if (controller.variables.shotTimer >= (0.1f * 2f * Time.deltaTime))
+        {
+            controller.bullets = Mathf.Max(--controller.bullets, 0);
+            controller.variables.currentShots++;
+            controller.variables.shotTimer = 0;
+            return;
+        }
+
+        controller.variables.shotTimer += controller.classStats.ShotRateFactor * Time.deltaTime;
+    }
 
     public override void Act(StateController controller)
     {
-        throw new System.NotImplementedException();
+        controller.focusSight = true;
+
+        if(CanShoot(controller))
+        {
+            Shoot(controller);
+        }
+        controller.variables.blindEngageTimer += Time.deltaTime;
     }
 }
