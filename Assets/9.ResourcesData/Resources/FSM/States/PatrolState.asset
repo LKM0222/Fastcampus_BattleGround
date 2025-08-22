@@ -14,5 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   actions:
   - {fileID: 11400000, guid: 465afc9c5ea7c4048ba10e27f5187057, type: 2}
-  transitions: []
+  transitions:
+  - decision: {fileID: 11400000, guid: e84876c5014130441b42d07c8b965914, type: 2}
+    trueState: {fileID: 11400000, guid: a1f29ac100d87455298ec79fbd04038f, type: 2}
+    falseState: {fileID: 11400000, guid: 72168af21039546f8a797ce3f393e01c, type: 2}
+  - decision: {fileID: 11400000, guid: b4afc667daf544916af85309b2cd22e2, type: 2}
+    trueState: {fileID: 11400000, guid: 4c6354cde6a1a4255963908d4aa60ae2, type: 2}
+    falseState: {fileID: 11400000, guid: 72168af21039546f8a797ce3f393e01c, type: 2}
+  - decision: {fileID: 11400000, guid: 03e2e130d1e37408c8ecc888cf6681ba, type: 2}
+    trueState: {fileID: 11400000, guid: 4c6354cde6a1a4255963908d4aa60ae2, type: 2}
+    falseState: {fileID: 11400000, guid: 72168af21039546f8a797ce3f393e01c, type: 2}
+  - decision: {fileID: 11400000, guid: 6dcbec84293864211aa57d91a4bfd70d, type: 2}
+    trueState: {fileID: 11400000, guid: 9465ae777801542b1942785fcf4faaef, type: 2}
+    falseState: {fileID: 11400000, guid: 72168af21039546f8a797ce3f393e01c, type: 2}
   sceneGizmoColor: {r: 0.08025527, g: 1, b: 0, a: 1}
