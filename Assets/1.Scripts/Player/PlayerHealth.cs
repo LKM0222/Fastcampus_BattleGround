@@ -26,6 +26,9 @@ public class PlayerHealth : HealthBase
     private float originalBarScale;
     private bool critical;
 
+    private BlinkHUD criticalHUD;
+    private HurtHUD hurtHUD;
+
     private void Awake()
     {
         myAnimator = GetComponent<Animator>();
@@ -36,6 +39,10 @@ public class PlayerHealth : HealthBase
         healthLabel = healthHUD.Find($"HealthBar/Label").GetComponent<Text>();
         originalBarScale = healthBar.sizeDelta.x;
         healthLabel.text = "" + (int)health;
+
+        criticalHUD = healthHUD.Find("Bloodframe").GetComponent<BlinkHUD>();
+        hurtHUD = gameObject.AddComponent<HurtHUD>();
+        hurtHUD.SetUp(healthHUD, hurtPrefab, decayFactor, transform);
     }
 
     private void Update()
@@ -84,6 +91,11 @@ public class PlayerHealth : HealthBase
 
         UpdateHealthBar();
 
+        if (hurtPrefab && healthHUD)
+        {
+            hurtHUD.DrawHurtUI(origin.transform, origin.GetHashCode());
+        }
+
         if (health <= 0)
         {
             Kill();
@@ -91,6 +103,7 @@ public class PlayerHealth : HealthBase
         else if (health <= criticalHealth && !critical)
         {
             critical = true;
+            criticalHUD.StartBlink();
         }
 
         SoundManager.Instance.PlayOneShotEffect((int)hitSound, location, 1f);

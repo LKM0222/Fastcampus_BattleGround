@@ -51,5 +51,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "BattleGround.sln"
+    "dotnet.defaultSolution": "Fastcampus_BattleGround.sln"
 }
