@@ -12,8 +12,8 @@ public class EnemyHealth : HealthBase
 
     private float totalHealth;
     private Transform weapon;
-    private Transform hud;
-    private RectTransform healthBar;
+    [SerializeField] private Transform hud;
+    [SerializeField] private RectTransform healthBar;
     private float originalBarScale;
     private HealthHUD healthUI;
 
@@ -21,25 +21,25 @@ public class EnemyHealth : HealthBase
     private StateController controller;
     private GameObject gameController;
 
-    private void Awake() 
+    private void Awake()
     {
         hud = Instantiate(healthHUD, transform).transform;
-        if(!hud.gameObject.activeSelf)
+        if (!hud.gameObject.activeSelf)
         {
             hud.gameObject.SetActive(true);
         }
         totalHealth = health;
-        healthBar = hud.transform.Find("bar").GetComponent<RectTransform>();
+        healthBar = hud.transform.Find("Bar").GetComponent<RectTransform>();
         healthUI = hud.GetComponent<HealthHUD>();
         originalBarScale = healthBar.sizeDelta.x;
         anim = GetComponent<Animator>();
         controller = GetComponent<StateController>();
         gameController = GameObject.FindGameObjectWithTag("GameController");
 
-        foreach(Transform child in anim.GetBoneTransform(HumanBodyBones.RightHand))
+        foreach (Transform child in anim.GetBoneTransform(HumanBodyBones.RightHand))
         {
             weapon = child.Find("muzzle");
-            if(weapon != null)
+            if (weapon != null)
             {
                 break;
             }
@@ -55,7 +55,7 @@ public class EnemyHealth : HealthBase
 
     private void RemoveAllForces()
     {
-        foreach(Rigidbody body in GetComponentsInChildren<Rigidbody>())
+        foreach (Rigidbody body in GetComponentsInChildren<Rigidbody>())
         {
             body.isKinematic = false;
             body.velocity = Vector3.zero;
@@ -64,9 +64,9 @@ public class EnemyHealth : HealthBase
 
     public void Kill()
     {
-        foreach(MonoBehaviour mb in GetComponents<MonoBehaviour>())
+        foreach (MonoBehaviour mb in GetComponents<MonoBehaviour>())
         {
-            if(this != mb)
+            if (this != mb)
             {
                 Destroy(mb);
             }
@@ -84,7 +84,7 @@ public class EnemyHealth : HealthBase
 
     public override void TakeDamage(Vector3 location, Vector3 direction, float damage, Collider bodyPart = null, GameObject origin = null)
     {
-        if(!isDead && headShot && bodyPart.transform == anim.GetBoneTransform(HumanBodyBones.Head))
+        if (!isDead && headShot && bodyPart.transform == anim.GetBoneTransform(HumanBodyBones.Head))
         {
             damage *= 10;
             gameController.SendMessage("HeadShotCallback", SendMessageOptions.DontRequireReceiver);
@@ -92,7 +92,7 @@ public class EnemyHealth : HealthBase
         Instantiate(bloodSample, location, Quaternion.LookRotation(-direction), transform);
         health -= damage;
 
-        if(!isDead)
+        if (!isDead)
         {
             anim.SetTrigger("Hit");
             healthUI.SetVisible();
@@ -101,9 +101,9 @@ public class EnemyHealth : HealthBase
             controller.personalTarget = controller.aimTarget.position;
         }
 
-        if(health <= 0)
+        if (health <= 0)
         {
-            if(!isDead)
+            if (!isDead)
             {
                 Kill();
             }

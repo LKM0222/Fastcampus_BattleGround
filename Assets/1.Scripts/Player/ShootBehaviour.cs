@@ -44,7 +44,7 @@ public class ShootBehaviour : GenericBehaviour
     [SerializeField] private List<InteractiveWeapon> weapons; // 소지하고 있는 무기들.
     private bool isAiming, isAimBlocked;
 
-    private Transform gunMuzzle;
+    [SerializeField] private Transform gunMuzzle;
     private float distToHand;
 
     private Vector3 castRelativeOrigin;
@@ -111,6 +111,7 @@ public class ShootBehaviour : GenericBehaviour
 
     private void DrawShoot(GameObject weapon, Vector3 destination, Vector3 targetNormal, Transform parent, bool placeSparks = true, bool placeBulletHole = true)
     {
+        Debug.Log($"Gun muzzle is null? {gunMuzzle == null}");
         Vector3 origin = gunMuzzle.position - gunMuzzle.right * 0.5f;
 
         muzzleFlash.SetActive(true);
@@ -279,7 +280,7 @@ public class ShootBehaviour : GenericBehaviour
         if (newWeapon > 0)
         {
             weapons[newWeapon].gameObject.SetActive(false);
-            gunMuzzle = weapons[newWeapon].transform.Find("muzzle");
+            gunMuzzle = weapons[newWeapon].transform.Find("Muzzle");
             weapons[newWeapon].Toggle(true);
         }
 

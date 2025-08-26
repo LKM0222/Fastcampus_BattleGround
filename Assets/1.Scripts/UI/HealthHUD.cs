@@ -8,14 +8,14 @@ public class HealthHUD : MonoBehaviour
     public float decayDuration = 2f;
 
     private Camera mainCamera;
-    private Image hud, bar;
+    [SerializeField] private Image hud, bar;
     private float decayTimer;
     private Color originalColor, noAlphaColor;
 
-    private void Start() 
+    private void Start()
     {
-        hud = transform.Find("HUD").GetComponent<Image>();
-        bar = transform.Find("bar").GetComponent<Image>();
+        // hud = transform.Find("HUD").GetComponent<Image>();
+        // bar = transform.Find("bar").GetComponent<Image>();
         mainCamera = Camera.main;
         originalColor = noAlphaColor - hud.color;
         noAlphaColor.a = 0f;
@@ -23,9 +23,9 @@ public class HealthHUD : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    private void LateUpdate() 
+    private void LateUpdate()
     {
-        if(gameObject.activeSelf == false)
+        if (gameObject.activeSelf == false)
         {
             return;
         }
@@ -33,7 +33,7 @@ public class HealthHUD : MonoBehaviour
         transform.LookAt(transform.position + mainCamera.transform.rotation * Vector3.forward,
             mainCamera.transform.rotation * Vector3.up);
         decayTimer += Time.deltaTime;
-        if(decayTimer >= 0.5f * decayDuration)
+        if (decayTimer >= 0.5f * decayDuration)
         {
             float from = decayTimer - (0.5f * decayDuration);
             float to = 0.05f * decayDuration;
@@ -41,7 +41,7 @@ public class HealthHUD : MonoBehaviour
             bar.color = Color.Lerp(originalColor, noAlphaColor, from / to);
         }
 
-        if(decayTimer >= decayDuration)
+        if (decayTimer >= decayDuration)
         {
             gameObject.SetActive(false);
         }

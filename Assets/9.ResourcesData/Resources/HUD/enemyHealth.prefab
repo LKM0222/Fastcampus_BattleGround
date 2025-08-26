@@ -117,6 +117,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   decayDuration: 2
+  hud: {fileID: 3119322726752512459}
+  bar: {fileID: 1210615752845909983}
 --- !u!1 &3899837464714159653
 GameObject:
   m_ObjectHideFlags: 0

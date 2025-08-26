@@ -27,7 +27,7 @@ public class AttackAction : Action
     }
 
     private void DoShot(StateController controller, Vector3 direction, Vector3 hitPoint,
-        Vector3 hitNomal = default, bool organic = false, Transform target = null )
+        Vector3 hitNomal = default, bool organic = false, Transform target = null)
     {
         GameObject muzzleFlash = EffectManager.Instance.EffectOneShot((int)EffectList.flash, Vector3.zero);
         muzzleFlash.transform.SetParent(controller.enemyAnimation.gunMuzzle);
@@ -42,19 +42,19 @@ public class AttackAction : Action
         shotTracer.transform.position = origin;
         shotTracer.transform.rotation = Quaternion.LookRotation(direction);
 
-        if(target && !organic)
+        if (target && !organic)
         {
-            GameObject bulletHole = EffectManager.Instance.EffectOneShot((int)EffectList.bulletHole, 
+            GameObject bulletHole = EffectManager.Instance.EffectOneShot((int)EffectList.bulletHole,
                 hitPoint + 0.01f * hitNomal);
             bulletHole.transform.rotation = Quaternion.FromToRotation(Vector3.up, hitNomal);
 
             GameObject instantSpark = EffectManager.Instance.EffectOneShot((int)EffectList.sparks,
                 hitPoint);
-        } 
+        }
         else if (target && organic) //플레이어를 맞춘 경우
         {
             HealthBase targetHealth = target.GetComponent<HealthBase>(); // 플레이어 체력
-            if(targetHealth)
+            if (targetHealth)
             {
                 targetHealth.TakeDamage(hitPoint, direction, controller.classStats.BulletDamage,
                     target.GetComponent<Collider>(), controller.gameObject);
@@ -62,7 +62,7 @@ public class AttackAction : Action
         }
 
         // 여기서는 클래스에 따라 사운드가 다르게 출력되어야함.
-        SoundManager.Instance.PlayShotSound(controller.classID, 
+        SoundManager.Instance.PlayShotSound(controller.classID,
             controller.enemyAnimation.gunMuzzle.position, 2f);
     }
 
@@ -78,7 +78,7 @@ public class AttackAction : Action
         shotDirection = shotDirection.normalized + imprecision;
 
         Ray ray = new Ray(controller.enemyAnimation.gunMuzzle.position, shotDirection);
-        if(Physics.Raycast(ray, out RaycastHit hit, controller.viewRadius,
+        if (Physics.Raycast(ray, out RaycastHit hit, controller.viewRadius,
             controller.generalStats.shotMask.value))
         {
             bool isOrganic = ((1 << hit.transform.root.gameObject.layer) &
@@ -97,12 +97,12 @@ public class AttackAction : Action
             controller.enemyAnimation.gunMuzzle.position).sqrMagnitude;
 
         // 사격 거리가 괜찮고, 조준중이고, 각도 안에 들어와있고 가까울 때
-        if(controller.Aiming && 
-            (controller.enemyAnimation.currentAnimingAngleGap < aimAngleGap || 
+        if (controller.Aiming &&
+            (controller.enemyAnimation.currentAnimingAngleGap < aimAngleGap ||
             distance <= 5.0f))
-        {   
+        {
             // 발사 할 수 있는 딜레이만큼 충분히 지났다면 발사.
-            if(controller.variables.startShootTimer >= startShootDelay)
+            if (controller.variables.startShootTimer >= startShootDelay)
             {
                 return true;
             }
@@ -117,9 +117,9 @@ public class AttackAction : Action
 
     private void Shoot(StateController controller)
     {
-        if(Time.timeScale > 0 && controller.variables.shotTimer == 0f)
+        if (Time.timeScale > 0 && controller.variables.shotTimer == 0f)
         {
-            controller.enemyAnimation.anim.SetTrigger("Shoot");
+            controller.enemyAnimation.anim.SetTrigger("Shooting");
             CastShot(controller);
         }
         else if (controller.variables.shotTimer >= (0.1f * 2f * Time.deltaTime))
@@ -137,7 +137,7 @@ public class AttackAction : Action
     {
         controller.focusSight = true;
 
-        if(CanShoot(controller))
+        if (CanShoot(controller))
         {
             Shoot(controller);
         }
