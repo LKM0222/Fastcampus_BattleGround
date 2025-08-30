@@ -139,8 +139,13 @@ public class StateController : MonoBehaviour
             return;
         }
 
-        currentState.DoActions(this);
-        currentState.CheckTransitions(this);
+        UpdateState(this);
+    }
+
+    public void UpdateState(StateController controller)
+    {
+        currentState.DoActions(controller);
+        currentState.CheckTransitions(controller);
     }
 
     private void OnDestroy()
